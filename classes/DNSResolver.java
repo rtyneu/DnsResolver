@@ -13,7 +13,8 @@ public class DNSResolver {
 
         try {
             byte[] data = new byte[32];
-            DatagramPacket testPacket = new DatagramPacket(data, 32, InetAddress.getLocalHost(), 11111);
+            DatagramPacket testPacket = new DatagramPacket(data, 32,
+                    InetAddress.getByAddress(new byte[] { 10, 0, 0, 118 }), 11111);
             DatagramSocket UDPSocket = new DatagramSocket(12345,
                     InetAddress.getByAddress(new byte[] { 10, 0, 0, 118 }));
             UDPSocket.send(testPacket);
