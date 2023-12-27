@@ -22,7 +22,8 @@ public class DNSServer_test {
                 data = testPacket.getData();
                 System.out.println("the packet received from -->" + testPacket.getSocketAddress() + "\nprot--->"
                         + testPacket.getPort());
-                System.out.println("the data is: " + data);
+                System.out.println("the data is: " + new String(data, 0, data.length));
+                System.out.println("the size of data is: " + data.length);
 
             }
 
