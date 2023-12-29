@@ -8,18 +8,63 @@ import java.net.SocketAddress;
 import java.net.InetSocketAddress;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.nio.ByteBuffer;
+import java.io.DataOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
 
 public class DNSResolver {
     public static void main(String[] args) {
 
-        String message = "01234567890123456789012345678901";
         try {
-            byte[] data = message.getBytes(StandardCharsets.UTF_8);
-            DatagramPacket testPacket = new DatagramPacket(data, 32,
-                    InetAddress.getByAddress(new byte[] { 10, 0, 0, 118 }), 11111);
             DatagramSocket UDPSocket = new DatagramSocket(12345,
                     InetAddress.getByAddress(new byte[] { 10, 0, 0, 118 }));
-            UDPSocket.send(testPacket);
+            // this part will move to constructDNSPacket method later!
+
+            short ID = Short.parseShort("0000011101010101", 2);
+            short FLAGS = Short.parseShort("0000000000000000", 2);
+            short QDCOUNT = Short.parseShort("0000000000000001", 2);
+            short ADCOUNT = Short.parseShort("0000000000000000", 2);
+            short NSCOUNT = Short.parseShort("0000000000000000", 2);
+            short ARCOUNT = Short.parseShort("0000000000000000", 2);
+
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            DataOutputStream DNSHeader = new DataOutputStream(b);
+            DNSHeader.writeShort(ID);
+            DNSHeader.writeShort(FLAGS);
+            DNSHeader.writeShort(QDCOUNT);
+            DNSHeader.writeShort(ADCOUNT);
+            DNSHeader.writeShort(NSCOUNT);
+            DNSHeader.writeShort(ARCOUNT);
+
+            // question section
+            ByteArrayOutputStream q = new ByteArrayOutputStream();
+            DataOutputStream DNSQuestion = new DataOutputStream(q);
+
+            String name = "google.com";
+            String[] nameParts = name.split("\\.");
+
+            for (int index = 0; index < nameParts.length; index++) {
+                DNSQuestion.writeByte(nameParts[index].length());
+                DNSQuestion.write(nameParts[index].getBytes(StandardCharsets.UTF_8));
+            }
+            DNSQuestion.writeByte(0);
+
+            short QTYPE = Short.parseShort("1", 2);
+            DNSQuestion.writeShort(QTYPE);
+
+            short QCLASS = Short.parseShort("1", 2);
+            DNSQuestion.writeShort(QCLASS);
+
+            ByteArrayOutputStream finalPacket = new ByteArrayOutputStream();
+            DataOutputStream DNSPacket = new DataOutputStream(finalPacket);
+            DNSPacket.write(b.toByteArray());
+            DNSPacket.write(q.toByteArray());
+
+            DatagramPacket p = new DatagramPacket(finalPacket.toByteArray(), finalPacket.size(),
+                    InetAddress.getByAddress(new byte[] { 1, 1, 1, 1 }), 53);
+
+            UDPSocket.send(p);
 
             System.out.println("the packet successfully sent!");
         } catch (UnknownHostException error) {
